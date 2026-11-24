@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Document</title>
+		<style>
+			td {
+				width: 25px;
+				height: 25px;
+				background: grey;
+				text-align: center;
+			}
+		</style>
+	</head>
+	<body>
+		<script>
+			let form = document.createElement("div");
+			document.body.append(form);
+			let texth = document.createElement("p");
+			texth.textContent = "Height: ";
+			form.append(texth);
+			let inputh = document.createElement("input");
+			inputh.type = "text";
+			inputh.id = "h";
+			form.append(inputh);
+			let textw = document.createElement("p");
+			textw.textContent = "Width: ";
+			form.append(textw);
+			let inputw = document.createElement("input");
+			inputw.type = "text";
+			inputw.id = "w";
+			form.append(inputw);
+			let textm = document.createElement("p");
+			textm.textContent = "Mines: ";
+			form.append(textm);
+			let inputm = document.createElement("input");
+			inputm.type = "text";
+			inputm.id = "m";
+			form.append(inputm);
+			form.append(document.createElement("br"));
+			form.append(document.createElement("br"));
+			let subm = document.createElement("button");
+			subm.textContent = "Submit";
+			form.append(subm);
+			form.append(document.createElement("br"));
+			form.append(document.createElement("br"));
+
+			let height;
+			let width;
+			let mines;
+			let isFirstClick = true;
+			subm.onclick = () => {
+				if (
+					isNaN(inputh.value) ||
+					isNaN(inputw.value) ||
+					isNaN(inputm.value) ||
+					!inputh.value ||
+					!inputw.value ||
+					!inputm.value
+				) {
+					alert("wpisz liczby!");
+				} else {
+					height = parseInt(inputh.value);
+					width = parseInt(inputw.value);
+					mines = parseInt(inputm.value);
+					genTable();
+					renderTable();
+				}
+			};
+			let gameTable = [];
+			function genTable() {
+				for (let i = 0; i < height; i++) {
+					gameTable[i] = [];
+					for (let j = 0; j < width; j++) {
+						gameTable[i][j] = 0;
+					}
+				}
+			}
+			function renderTable() {
+				let table = document.createElement("table");
+				table.border = 1;
+				document.body.append(table);
+				for (let i = 0; i < height; i++) {
+					let row = document.createElement("tr");
+					table.append(row);
+					for (let j = 0; j < width; j++) {
+						let cell = document.createElement("td");
+						cell.id = `${i}_${j}`;
+						cell.className = "cell";
+						cell.addEventListener("contextmenu", (event) => {
+							event.preventDefault();
+							toggleFlag(cell);
+						});
+						cell.onclick = () => {
+							cellClick(cell);
+						};
+						row.append(cell);
+					}
+				}
+			}
+			function genBomb(safeX, safeY) {
+				for (let i = 0; i < mines; i++) {
+					let y = Math.floor(Math.random() * width);
+					let x = Math.floor(Math.random() * height);
+					while (
+						gameTable[x][y] == "B" ||
+						(x == safeX && y == safeY)
+					) {
+						y = Math.floor(Math.random() * width);
+						x = Math.floor(Math.random() * height);
+					}
+					gameTable[x][y] = "B";
+				}
+			}
+			function genNumbers() {
+				for (let i = 0; i < height; i++) {
+					for (let j = 0; j < width; j++) {
+						if (gameTable[i][j] == "B") {
+							continue;
+						}
+						let bombs = 0;
+						for (let k = -1; k < 2; k++) {
+							for (let l = -1; l < 2; l++) {
+								if (
+									i + k < 0 ||
+									i + k > height - 1 ||
+									j + l < 0 ||
+									j + l > width - 1
+								) {
+									continue;
+								}
+								if (gameTable[i + k][j + l] == "B") {
+									bombs++;
+								}
+							}
+						}
+						gameTable[i][j] = bombs;
+					}
+				}
+			}
+			function toggleFlag(cell) {
+				if (cell.classList.contains("toggled")) {
+					cell.style.background = "grey";
+					cell.classList.remove("toggled");
+				} else {
+					cell.style.background = "red";
+					cell.classList.add("toggled");
+				}
+			}
+			function cellClick(cell) {
+				let x = parseInt(cell.id.split("_")[0]);
+				let y = parseInt(cell.id.split("_")[1]);
+				if (isFirstClick) {
+					genBomb(x, y);
+					genNumbers();
+					isFirstClick = false;
+				}
+				if (cell.classList.contains("open")) {
+					return;
+				}
+				if (gameTable[x][y] == "B") {
+					gameEnd();
+				} else {
+					cell.style.background = "white";
+					cell.textContent = gameTable[x][y];
+					cell.classList.add("open");
+				}
+				if (gameTable[x][y] == 0) {
+					for (let i = -1; i < 2; i++) {
+						for (let j = -1; j < 2; j++) {
+							if (
+								x + i < 0 ||
+								x + i > height - 1 ||
+								y + j < 0 ||
+								y + j > width - 1
+							) {
+								continue;
+							}
+							cellClick(
+								document.getElementById(`${x + i}_${y + j}`),
+							);
+						}
+					}
+				}
+			}
+			function gameEnd() {
+				alert("YOU LOST");
+			}
+		</script>
+	</body>
+</html>
